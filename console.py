@@ -1,345 +1,219 @@
 #!/usr/bin/python3
-<<<<<<< HEAD
-''' console module '''
+"""Module for the entry point of the command interpreter."""
+
 import cmd
-import sys
 from models.base_model import BaseModel
-from models.engine.file_storage import FileStorage
 from models import storage
-import json
-from models.user import User
-from models.place import Place
-from models.state import State
-from models.city import City
-from models.amenity import Amenity
-from models.review import Review
-
-
-class HBNBCommand(cmd.Cmd):
-    ''' HBNB class contains entry point '''
-
-    prompt = '(hbnb) '
-    myclasses = ["BaseModel", "User", "Place", "State", "Amenity", "Review",
-                 "City"]
-
-    def do_EOF(self, line):
-        ''' exit the program '''
-        return True
-
-    def help_EOF(self):
-        ''' help EOF'''
-        print("EOF command to exit the program\n")
-
-    def help_quit(self):
-        ''' help quit '''
-        print("Quit command to exit the program\n")
-
-    def do_quit(self, arg):
-        ''' quit interpreter '''
-        return True
-
-    def emptyline(self):
-        ''' do nothing with empty line '''
-        pass
-
-    def do_create(self, classname):
-        ''' create a new instance of '''
-        if len(classname) == 0:
-            print('** class name missing **')
-        elif classname not in self.myclasses:
-                print('** class doesn\'t exist **')
-                return False
-        else:
-            new = eval("{}()".format(classname))
-            new.save()
-            print(new.id)
-
-    def help_create(self):
-        ''' help create '''
-        print("Create command to create a class\n")
-
-    def do_show(self, line):
-        '''represents an instance'''
-        args = line.split()
-        if len(args) == 0:
-            print('** class name missing **')
-            return False
-        elif args[0] not in self.myclasses:
-            print('** class doesn\'t exist **')
-            return False
-
-        if len(args) < 2:
-            print('** instance id missing **')
-            return False
-
-        all_objs = storage.all()
-        for i in all_objs.keys():
-            if i == "{}.{}".format(args[0], args[1]):
-                print(all_objs[i])
-                return False
-        print('** no instance found **')
-
-    def help_show(self):
-        ''' help show '''
-        print("Show command to display the string representation of class\n")
-
-    def do_destroy(self, line):
-        ''' deletes an instance based on the class id'''
-        args = line.split()
-        if len(line) == 0:
-            print('** class name missing **')
-            return False
-        elif args[0] not in self.myclasses:
-            print('** class doesn\'t exist **')
-            return False
-        elif len(args) < 2:
-            print('** instance id missing **')
-            return False
-        else:
-            all_objs = storage.all()
-            for i in all_objs:
-                if i == "{}.{}".format(args[0], args[1]):
-                    all_objs.pop(i)
-                    storage.save()
-                    return False
-            print('** no instance found **')
-
-    def help_destroy(self):
-        ''' help destroy '''
-        print("Destroy command to destroy an object\n")
-
-    def do_all(self, line):
-        ''' prints all string representations of instances'''
-        args = line.split()
-        all_objs = storage.all()
-
-        if len(args) == 0:
-            for i in all_objs:
-                strarg = str(all_objs[i])
-                print(strarg)
-        elif line not in self.myclasses:
-            print('** class doesn\'t exist **')
-            return False
-        else:
-            for i in all_objs:
-                if i.startswith(args[0]):
-                    strarg = str(all_objs[i])
-                    print(strarg)
-        return False
-
-    def help_all(self):
-        ''' help all'''
-        print("All command to show all instances\n")
-
-    def do_update(self, line):
-        ''' updates an instance based on class name and id'''
-        args = line.split()
-        flag = 0
-
-        if len(line) == 0:
-            print('** class name missing **')
-            return False
-
-        try:
-            clsname = line.split()[0]
-            eval("{}()".format(clsname))
-        except IndexError:
-            print('** class doesn\'t exist **')
-            return False
-
-        try:
-            instanceid = line.split()[1]
-        except IndexError:
-            print('** instance id missing **')
-            return False
-
-        all_objs = storage.all()
-        try:
-            clschange = all_objs["{}.{}".format(clsname, instanceid)]
-        except IndexError:
-            print('** no instance found **')
-            return False
-
-        try:
-            attributename = line.split()[2]
-        except IndexError:
-            print('** attribute name missing **')
-            return False
-
-        try:
-            updatevalue = line.split()[3]
-        except IndexError:
-            print('** value missing **')
-            return False
-
-        if updatevalue.isdecimal() is True:
-            setattr(clschange, attributename, int(updatevalue))
-            storage.save()
-        else:
-            try:
-                setattr(clschange, attributename, float(updatevalue))
-                storage.save()
-            except:
-                setattr(clschange, attributename, str(updatevalue))
-                storage.save()
-
-    def help_update(self):
-        '''help update'''
-        print("update command to update attributes\n")
-
-
-if __name__ == '__main__':
-    HBNBCommand().cmdloop()
-=======
-"""This is the console module"""
-
 import re
-import cmd
-import sys
 import json
-import models
-from datetime import datetime
-from models.base_model import BaseModel
-from models.engine.file_storage import FileStorage
-from models import storage
-from models.user import User
-from models.amenity import Amenity
-from models.review import Review
-from models.state import State
-from models.place import Place
-from models.base_model import BaseModel
-from models.city import City
 
 
 class HBNBCommand(cmd.Cmd):
-    """
-    The class HBNBCommand
-    This is the entry point to the command interpreter
-    """
+
+    """Class for the command interpreter."""
 
     prompt = "(hbnb) "
 
-    def do_quit(self, line):
-        """Quit command to exit the program"""
-        return True
+    def default(self, line):
+        """Catch commands if nothing else matches then."""
+        # print("DEF:::", line)
+        self._precmd(line)
+
+    def _precmd(self, line):
+        """Intercepts commands to test for class.syntax()"""
+        # print("PRECMD:::", line)
+        match = re.search(r"^(\w*)\.(\w+)(?:\(([^)]*)\))$", line)
+        if not match:
+            return line
+        classname = match.group(1)
+        method = match.group(2)
+        args = match.group(3)
+        match_uid_and_args = re.search('^"([^"]*)"(?:, (.*))?$', args)
+        if match_uid_and_args:
+            uid = match_uid_and_args.group(1)
+            attr_or_dict = match_uid_and_args.group(2)
+        else:
+            uid = args
+            attr_or_dict = False
+
+        attr_and_value = ""
+        if method == "update" and attr_or_dict:
+            match_dict = re.search('^({.*})$', attr_or_dict)
+            if match_dict:
+                self.update_dict(classname, uid, match_dict.group(1))
+                return ""
+            match_attr_and_value = re.search(
+                '^(?:"([^"]*)")?(?:, (.*))?$', attr_or_dict)
+            if match_attr_and_value:
+                attr_and_value = (match_attr_and_value.group(
+                    1) or "") + " " + (match_attr_and_value.group(2) or "")
+        command = method + " " + classname + " " + uid + " " + attr_and_value
+        self.onecmd(command)
+        return command
+
+    def update_dict(self, classname, uid, s_dict):
+        """Helper method for update() with a dictionary."""
+        s = s_dict.replace("'", '"')
+        d = json.loads(s)
+        if not classname:
+            print("** class name missing **")
+        elif classname not in storage.classes():
+            print("** class doesn't exist **")
+        elif uid is None:
+            print("** instance id missing **")
+        else:
+            key = "{}.{}".format(classname, uid)
+            if key not in storage.all():
+                print("** no instance found **")
+            else:
+                attributes = storage.attributes()[classname]
+                for attribute, value in d.items():
+                    if attribute in attributes:
+                        value = attributes[attribute](value)
+                    setattr(storage.all()[key], attribute, value)
+                storage.all()[key].save()
 
     def do_EOF(self, line):
-        """Quit command to exit the program at end of file"""
+        """Handles End Of File character.
+        """
         print()
         return True
 
+    def do_quit(self, line):
+        """Exits the program.
+        """
+        return True
+
     def emptyline(self):
-        """Ignore empty line"""
+        """Doesn't do anything on ENTER.
+        """
         pass
 
     def do_create(self, line):
+        """Creates an instance.
         """
-        Creates a new instance of BaseModel, saves it
-        (to the JSON file) and prints the id.
-        """
-        if line == "":
-            print("** class name is missing **")
-        elif line != "BaseModel":
-            print("** class does not exist **")
+        if line == "" or line is None:
+            print("** class name missing **")
+        elif line not in storage.classes():
+            print("** class doesn't exist **")
         else:
-            new_model = BaseModel()
-            new_model.save()
-            print("{}".format(new_model.id))
+            b = storage.classes()[line]()
+            b.save()
+            print(b.id)
 
     def do_show(self, line):
-        """
-        Prints the string representation of an instance
-        based on the class name and id
+        """Prints the string representation of an instance.
         """
         if line == "" or line is None:
             print("** class name missing **")
         else:
-            _input = line.split(' ')
-            if _input[0] not in class_check:
+            words = line.split(' ')
+            if words[0] not in storage.classes():
                 print("** class doesn't exist **")
-            elif len(_input) < 2:
+            elif len(words) < 2:
                 print("** instance id missing **")
             else:
-                key = "{}.{}".format(_input[0], _input[1])
+                key = "{}.{}".format(words[0], words[1])
                 if key not in storage.all():
                     print("** no instance found **")
                 else:
                     print(storage.all()[key])
 
     def do_destroy(self, line):
-        """
-        Deletes an instance based on the class name and id
-        (save the change into the JSON file)
+        """Deletes an instance based on the class name and id.
         """
         if line == "" or line is None:
             print("** class name missing **")
         else:
-            _input = line.split(' ')
-            if _input[0] not in class_check:
+            words = line.split(' ')
+            if words[0] not in storage.classes():
                 print("** class doesn't exist **")
-            elif len(_input) < 2:
+            elif len(words) < 2:
                 print("** instance id missing **")
             else:
-                key = "{}.{}".format(_input[0], _input[1])
+                key = "{}.{}".format(words[0], words[1])
                 if key not in storage.all():
                     print("** no instance found **")
                 else:
                     del storage.all()[key]
                     storage.save()
 
-    def do_all(self, name):
+    def do_all(self, line):
+        """Prints all string representation of all instances.
         """
-        Prints all string representation of all instances
-        bases on a class name
-        """
-        if name != "":
-            inputt = name.split(' ')
-            if inputt[0] not in class_check:
+        if line != "":
+            words = line.split(' ')
+            if words[0] not in storage.classes():
                 print("** class doesn't exist **")
             else:
-                list_str = [str(obj) for key, obj in storage.all().items()
-                            if type(obj).__name__ == inputt[0]]
-                print(list_str)
+                nl = [str(obj) for key, obj in storage.all().items()
+                      if type(obj).__name__ == words[0]]
+                print(nl)
         else:
-            list_str = [str(obj) for key, obj in storage.all().items()]
-            print(list_str)
+            new_list = [str(obj) for key, obj in storage.all().items()]
+            print(new_list)
+
+    def do_count(self, line):
+        """Counts the instances of a class.
+        """
+        words = line.split(' ')
+        if not words[0]:
+            print("** class name missing **")
+        elif words[0] not in storage.classes():
+            print("** class doesn't exist **")
+        else:
+            matches = [
+                k for k in storage.all() if k.startswith(
+                    words[0] + '.')]
+            print(len(matches))
 
     def do_update(self, line):
+        """Updates an instance by adding or updating attribute.
         """
-        Updates an instance based on the class name and id
-        by adding or updating attribute(save the change into the JSON file)
-        """
-        objs = models.storage.all()
-        inpu = line.split()
         if line == "" or line is None:
             print("** class name missing **")
-        elif inpu[0] in class_check:
-            if len(inpu) < 2:
-                print("** instance id missing **")
-            elif len(inpu) < 3:
+            return
+
+        rex = r'^(\S+)(?:\s(\S+)(?:\s(\S+)(?:\s((?:"[^"]*")|(?:(\S)+)))?)?)?'
+        match = re.search(rex, line)
+        classname = match.group(1)
+        uid = match.group(2)
+        attribute = match.group(3)
+        value = match.group(4)
+        if not match:
+            print("** class name missing **")
+        elif classname not in storage.classes():
+            print("** class doesn't exist **")
+        elif uid is None:
+            print("** instance id missing **")
+        else:
+            key = "{}.{}".format(classname, uid)
+            if key not in storage.all():
+                print("** no instance found **")
+            elif not attribute:
                 print("** attribute name missing **")
-            elif len(inpu) < 4:
+            elif not value:
                 print("** value missing **")
             else:
-                key = "{}.{}".format(inpu[0], inpu[1])
-                if key in objs:
-                    if type(inpu[3]) is dict:
-                        objs[key].setattr(inpu[2], inpu[3])
-                    objs[key].__setattr__(inpu[2], inpu[3])
-                    objs[key].save()
-                    models.storage.reload()
+                cast = None
+                if not re.search('^".*"$', value):
+                    if '.' in value:
+                        cast = float
+                    else:
+                        cast = int
                 else:
-                    print("** no instance found **")
-        else:
-            print("** class doesn't exist **")
+                    value = value.replace('"', '')
+                attributes = storage.attributes()[classname]
+                if attribute in attributes:
+                    value = attributes[attribute](value)
+                elif cast:
+                    try:
+                        value = cast(value)
+                    except ValueError:
+                        pass  # fine, stay a string then
+                setattr(storage.all()[key], attribute, value)
+                storage.all()[key].save()
 
 
 if __name__ == '__main__':
-    class_check = {"Amenity", "BaseModel", "City" "Place", "Review",
-                   "State", "User"}
     HBNBCommand().cmdloop()
-<<<<<<< HEAD
-=======
-    
->>>>>>> 3bfd6872242ceade76d13dcaea96e1bc03b825cf
->>>>>>> 10abc73e6163ec54aecb84667643a4e5aaee94c0
