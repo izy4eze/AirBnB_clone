@@ -146,3 +146,7 @@ if __name__ == '__main__':
     class_check = {"Amenity", "BaseModel", "City" "Place", "Review",
                    "State", "User"}
     HBNBCommand().cmdloop()
+<<<<<<< HEAD
+=======
+    
+>>>>>>> 3bfd6872242ceade76d13dcaea96e1bc03b825cf
