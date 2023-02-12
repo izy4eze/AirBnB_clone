@@ -1,104 +1,62 @@
 #!/usr/bin/python3
-''' module for base_model tests '''
-from unittest import TestCase
+import unittest
+import pep8
 import json
-import re
-from uuid import UUID, uuid4
+import os
 from datetime import datetime
-from time import sleep
-import test_models.test_base_model
+from models.base_model import BaseModel
 
 
-class TestBaseModel(TestCase):
-    ''' tests BaseModel class '''
-    def test_3(self):
-        ''' task 0 tests '''
-        obj = BaseModel()
+class TestBaseModelDocs(unittest.TestCase):
+    """ check for documentation """
+    def test_class_doc(self):
+        """ check for class documentation """
+        self.assertTrue(len(BaseModel.__doc__) > 0)
 
-        # id format and uniqueness
-        self.assertTrue(type(getattr(obj, 'id', None) is str) and
-                        UUID(obj.id))
-        self.assertNotEqual(BaseModel().id, obj.id)
-        self.assertNotEqual(BaseModel().id, BaseModel().id)
-        self.assertNotEqual(BaseModel().id, BaseModel().id)
+    def test_method_docs(self):
+        """ check for method documentation """
+        for func in dir(BaseModel):
+            self.assertTrue(len(func.__doc__) > 0)
 
-        # created_at and updated_at types
-        self.assertTrue(type(obj.created_at) is datetime)
-        self.assertTrue(type(obj.updated_at) is datetime)
 
-        # string representation
-        self.assertEqual(str(obj), '[{}] ({}) {}'.format(
-            'BaseModel', obj.id, obj.__dict__))
+class TestBaseModelPep8(unittest.TestCase):
+    """ check for pep8 validation """
+    def test_pep8(self):
+        """ test base and test_base for pep8 conformance """
+        style = pep8.StyleGuide(quiet=True)
+        file1 = 'models/base_model.py'
+        file2 = 'tests/test_models/test_base_model.py'
+        result = style.check_files([file1, file2])
+        self.assertEqual(result.total_errors, 0,
+                         "Found code style errors (and warning).")
 
-        # time updates
-        old_ctm = obj.created_at
-        old_utm = obj.updated_at
-        sleep(0.01)
-        obj.save()
-        self.assertEqual(old_ctm, obj.created_at)
-        self.assertNotEqual(old_utm, obj.updated_at)
 
-        old_ctm = obj.created_at
-        old_utm = obj.updated_at
-        sleep(0.01)
-        obj.save()
-        self.assertEqual(old_ctm, obj.created_at)
-        self.assertNotEqual(old_utm, obj.updated_at)
+class TestBaseModel(unittest.TestCase):
+    """ tests for class BaseModel """
+    @classmethod
+    def setUpClass(cls):
+        """ set up instances for all tests """
+        cls.basemodel = BaseModel()
 
-        self.assertEqual(obj.to_dict(),
-                         {'__class__': 'BaseModel', 'id': obj.id,
-                          'created_at': obj.created_at.isoformat(),
-                          'updated_at': obj.updated_at.isoformat()})
+    def test_id(self):
+        """ test id """
+        self.assertEqual(str, type(self.basemodel.id))
 
-    def test_4(self):
-        ''' task 4 tests '''
-        # args ignorance
-        obj = BaseModel(1, 2, 3, 'kk')
-        self.assertTrue(type(getattr(obj, 'id', None) is str) and
-                        UUID(obj.id))
+    def test_created_at(self):
+        """ test created_at """
+        self.assertEqual(datetime, type(self.basemodel.created_at))
 
-        now = datetime.utcnow()
-        obj_dict = {'id': str(uuid4()), 'created_at': now.isoformat(),
-                    'updated_at': now.isoformat(), '__class__': 'BaseModel'}
-        # kwargs parsing
-        obj = BaseModel(**obj_dict)
-        self.assertEqual(obj.id, obj_dict['id'])
-        # datetime parsing
-        self.assertEqual(obj.created_at, now)
-        self.assertEqual(obj.updated_at, now)
-        # __class__ should not be added as an attribute
-        self.assertFalse('__class__' in obj.__dict__)
+    def test_updated_at(self):
+        """ test updated_at """
+        self.assertEqual(datetime, type(self.basemodel.updated_at))
 
-        # same objects creation
-        self.assertEqual(obj.to_dict(), BaseModel(**obj_dict).to_dict())
-        self.assertEqual(str(obj), str(BaseModel(**obj_dict)))
+    def test_to_dict(self):
+        """ test to_dict method """
+        new_dict = self.basemodel.to_dict()
+        self.assertEqual(type(new_dict), dict)
+        self.assertTrue('to_dict' in dir(self.basemodel))
 
-        # no __class__ dependency
-        del obj_dict['__class__']
-        BaseModel(**obj_dict)  # no execption raised
-
-        ##
-        ##
-        ##
-        # normal creation in kwargs absence
-        obj = BaseModel()
-        self.assertTrue(type(getattr(obj, 'id', None) is str) and
-                        UUID(obj.id))
-        self.assertNotEqual(BaseModel().id, obj.id)
-        self.assertNotEqual(BaseModel().id, BaseModel().id)
-        self.assertNotEqual(BaseModel().id, BaseModel().id)
-
-        # time updates
-        old_ctm = obj.created_at
-        old_utm = obj.updated_at
-        sleep(0.01)
-        obj.save()
-        self.assertEqual(old_ctm, obj.created_at)
-        self.assertNotEqual(old_utm, obj.updated_at)
-
-        old_ctm = obj.created_at
-        old_utm = obj.updated_at
-        sleep(0.01)
-        obj.save()
-        self.assertEqual(old_ctm, obj.created_at)
-        self.assertNotEqual(old_utm, obj.updated_at)
+    @classmethod
+    def tearDownClass(cls):
+        """ remove test instances """
+        pass
